@@ -1,22 +1,22 @@
 import processing.serial.*;
 
-final int divLength = 40;
-final int topLimit = 20;
-final int leftLimit = 40;
-final int bottomLimit = topLimit+divLength*10;
-final int rightLimit = leftLimit+divLength*20;
-final int middleX = leftLimit+divLength*10;
-final int middleY = topLimit+divLength*5;
-float[] dataArray = new float[101];
-float[] positionArray = new float[101];
+final int divLength = 40; // division length
+final int topLimit = 20; // top limit of the oscilloscope screen
+final int leftLimit = 40; // left limit of the oscilloscope screen
+final int bottomLimit = topLimit+divLength*10; // bottom limit of the oscilloscope screen
+final int rightLimit = leftLimit+divLength*20; // right limit of the oscilloscope screen
+final int middleX = leftLimit+divLength*10; // vertical middle of the oscilloscope screen
+final int middleY = topLimit+divLength*5; // horizontal middle of the oscilloscope screen
+float[] dataArray = new float[101]; // incoming data array
+float[] positionArray = new float[101]; // displaying data array
 int dataIndex = 0;
 float VDIV = 1.0f;
 float TDIV = 1.0f;
 int XOFFSET = 0;
 int YOFFSET = 0;
-long last;
-int status = 1;
-int frequency = 2;
+long last; // used for delay
+int status = 1; // on/off status
+int frequency = 2; // signal generator frequency
 Serial port;
 
 void setup() {
@@ -24,17 +24,17 @@ void setup() {
   fill(255);
   
   drawScope();
-  for (int i = 0; i < 101; i++) {
+  for (int i = 0; i < 101; i++) { // initialize arrays
     dataArray[i] = 0;
     positionArray[i] = 0;
   }
   printArray(Serial.list());
-  port = new Serial(this, Serial.list()[0], 9600);
-  frameRate(120);
-  last = millis();
+  port = new Serial(this, Serial.list()[0], 9600); // start serial communication
+  frameRate(120); 
+  last = millis(); 
 }
 
-void draw() {
+void draw() { // data drawing and getting cycle
   background(200);
   drawScope();
   if (status == 1)
@@ -47,7 +47,7 @@ void draw() {
   drawData();
 }
 
-void drawData() {
+void drawData() { // draws the signal curve
   for(int i = 0; i < 101; i++) {
     positionArray[i] = dataArray[i]*divLength/VDIV+YOFFSET*divLength/5;
   }
@@ -61,32 +61,32 @@ void drawData() {
   stroke(0);
 }
 int reading = 0;
-void getData() {
+void getData() { // get one signal value per function call
   if(port.available() > 0) {
     reading = port.read();
     dataArray[dataIndex] = reading/256.0f*5;
     dataIndex++;
     if(dataIndex > 100)
       dataIndex = 0;
-    port.clear();
+    port.clear(); // clear input buffer, otherwise there will be problems with getting data
   }
 }
 
-void drawScope() {
+void drawScope() { // draws the scope interface, including buttons
   line(leftLimit, middleY, rightLimit, middleY); // Y axis
   line(middleX, topLimit, middleX, bottomLimit); // X axis
   
-  for(int i = 0; i < 20; i++) { // X axis subdivisions
+  for(int i = 0; i < 20; i++) { // X axis divisions
     line(leftLimit + divLength*i, middleY-7, leftLimit + divLength*i, middleY+7);
-    for(int j = 0; j < 5; j++) {
+    for(int j = 0; j < 5; j++) { // X axis subdivisions
       line(leftLimit + divLength*i + divLength/5*j, middleY-3, leftLimit + divLength*i + divLength/5*j, middleY+3);
     }
   }
   line(rightLimit, middleY-7, rightLimit, middleY+7);
   
-  for(int i = 0; i < 10; i++) { // Y axis subdivisions
+  for(int i = 0; i < 10; i++) { // Y axis divisions
     line(middleX-7, topLimit + divLength*i, middleX+7, topLimit + divLength*i);
-    for(int j = 0; j < 5; j++) {
+    for(int j = 0; j < 5; j++) { // Y axis subdivisions
       line(middleX-3, topLimit + divLength*i + divLength/5*j, middleX+3, topLimit + divLength*i + divLength/5*j);
     }
   }
@@ -137,7 +137,7 @@ void drawScope() {
   text("-1 Hz", leftLimit+425, bottomLimit+107);
   text(frequency + "Hz", leftLimit+425, bottomLimit+82);
   
-  if (status == 1) {
+  if (status == 1) { // start/stop button
     fill(100,255,100);
     rect(leftLimit+500, bottomLimit+45, 75, 75);
     fill(0);
@@ -151,7 +151,7 @@ void drawScope() {
   }
 }
 
-void mouseClicked() {
+void mouseClicked() { // button click detection
   if(mouseY >= bottomLimit+45 && mouseY <= bottomLimit+70) {
     if(mouseX >= leftLimit && mouseX <= leftLimit+50) {
       VDIV *= 2;
